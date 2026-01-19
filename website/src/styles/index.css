@@ -61,6 +61,9 @@
   size-adjust: 82%;
 }
 
+/* Import Neon Theme Styles */
+@import './neon.css';
+
 .prose > h1:not(:first-child) {
   margin-top: 30px;
 }

@@ -18,6 +18,10 @@ export const soundFilterType = {
 };
 
 export const defaultSettings = {
+  // Beginner Mode - simplifies UI for new users
+  beginnerMode: true,
+  hasCompletedOnboarding: false,
+
   activeFooter: 'intro',
   keybindings: 'codemirror',
   isBracketMatchingEnabled: true,
@@ -32,7 +36,7 @@ export const defaultSettings = {
   isPatternHighlightingEnabled: true,
   isTabIndentationEnabled: false,
   isMultiCursorEnabled: false,
-  theme: 'strudelTheme',
+  theme: 'neonGreen',
   fontFamily: 'monospace',
   fontSize: 18,
   latestCode: '',
@@ -99,6 +103,8 @@ export function useSettings() {
     userPatterns: userPatterns,
     multiChannelOrbits: parseBoolean(state.multiChannelOrbits),
     includePrebakeScriptInShare: parseBoolean(state.includePrebakeScriptInShare),
+    beginnerMode: parseBoolean(state.beginnerMode),
+    hasCompletedOnboarding: parseBoolean(state.hasCompletedOnboarding),
     patternAutoStart: isUdels()
       ? false
       : state.patternAutoStart === undefined

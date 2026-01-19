@@ -1,4 +1,5 @@
 import strudelTheme, { settings as strudelThemeSettings } from './themes/strudel-theme.mjs';
+import neonGreen, { settings as neonGreenSettings } from './themes/neon-green.mjs';
 import bluescreen, { settings as bluescreenSettings } from './themes/bluescreen.mjs';
 import blackscreen, { settings as blackscreenSettings } from './themes/blackscreen.mjs';
 import whitescreen, { settings as whitescreenSettings } from './themes/whitescreen.mjs';
@@ -42,6 +43,7 @@ import noctisLilac, { settings as noctisLilacSettings } from './themes/noctisLil
 
 import { setTheme } from '@strudel/draw';
 export const themes = {
+  neonGreen,
   strudelTheme,
   algoboy,
   archBtw,
@@ -84,6 +86,7 @@ export const themes = {
 };
 
 export const settings = {
+  neonGreen: neonGreenSettings,
   strudelTheme: strudelThemeSettings,
   bluescreen: bluescreenSettings,
   bluescreenlight: bluescreenlightsettings,

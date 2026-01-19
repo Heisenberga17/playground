@@ -15,9 +15,24 @@ module.exports = {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
         },
+        glow: {
+          '0%, 100%': { boxShadow: '0 0 5px var(--glow-color, #00ff9f), 0 0 10px var(--glow-color, #00ff9f)' },
+          '50%': { boxShadow: '0 0 20px var(--glow-color, #00ff9f), 0 0 30px var(--glow-color, #00ff9f)' },
+        },
+        pulse: {
+          '0%, 100%': { opacity: 1 },
+          '50%': { opacity: 0.7 },
+        },
+        slideIn: {
+          '0%': { transform: 'translateY(10px)', opacity: 0 },
+          '100%': { transform: 'translateY(0)', opacity: 1 },
+        },
       },
       animation: {
         train: 'train 2s linear infinite',
+        glow: 'glow 2s ease-in-out infinite',
+        'pulse-slow': 'pulse 3s ease-in-out infinite',
+        'slide-in': 'slideIn 0.3s ease-out',
       },
       colors: {
         // codemirror-theme settings
@@ -31,6 +46,14 @@ module.exports = {
         gutterForeground: 'var(--gutterForeground)',
         gutterBorder: 'var(--gutterBorder)',
         lineHighlight: 'var(--lineHighlight)',
+        neon: {
+          green: '#00ff9f',
+          cyan: '#00d4ff',
+          magenta: '#ff006e',
+          orange: '#ff9f00',
+          purple: '#bd93f9',
+        },
+        card: 'var(--card-bg, #161b22)',
       },
       spacing: {
         'app-height': 'var(--app-height)',
