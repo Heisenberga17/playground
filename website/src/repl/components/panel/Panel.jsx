@@ -8,6 +8,7 @@ import { SoundsTab } from './SoundsTab';
 import { useLogger } from '../useLogger';
 import { WelcomeTab } from './WelcomeTab';
 import { PatternsTab } from './PatternsTab';
+import { DrumMachineTab } from './DrumMachineTab';
 import { ChevronLeftIcon, XMarkIcon } from '@heroicons/react/16/solid';
 import ExportTab from './ExportTab';
 
@@ -80,6 +81,7 @@ const tabNames = {
   welcome: 'intro',
   patterns: 'patterns',
   sounds: 'sounds',
+  drums: 'drums',
   reference: 'reference',
   export: 'export',
   console: 'console',
@@ -126,6 +128,8 @@ function PanelContent({ context, tab }) {
       return <ConsoleTab />;
     case tabNames.sounds:
       return <SoundsTab />;
+    case tabNames.drums:
+      return <DrumMachineTab context={context} />;
     case tabNames.reference:
       return <Reference />;
     case tabNames.export:
