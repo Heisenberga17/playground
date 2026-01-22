@@ -6,7 +6,6 @@ import { Reference } from './Reference';
 import { SettingsTab } from './SettingsTab';
 import { SoundsTab } from './SoundsTab';
 import { useLogger } from '../useLogger';
-import { WelcomeTab } from './WelcomeTab';
 import { PatternsTab } from './PatternsTab';
 import { DrumMachineTab } from './DrumMachineTab';
 import { ChevronLeftIcon, XMarkIcon } from '@heroicons/react/16/solid';
@@ -78,10 +77,9 @@ export function VerticalPanel({ context }) {
 }
 
 const tabNames = {
-  welcome: 'intro',
+  drums: 'drums',
   patterns: 'patterns',
   sounds: 'sounds',
-  drums: 'drums',
   reference: 'reference',
   export: 'export',
   console: 'console',
@@ -139,7 +137,7 @@ function PanelContent({ context, tab }) {
     case tabNames.files:
       return <FilesTab />;
     default:
-      return <WelcomeTab context={context} />;
+      return <DrumMachineTab context={context} />;
   }
 }
 

@@ -1,156 +1,144 @@
-// Drum Machine Utils - Audio Engine for Strudel Integration
-// Uses tidal-drum-machines samples from dough-samples
+// Drum Machine Utils - Pattern utilities for Strudel Integration
+// Audio playback is handled by Strudel's superdough
+// FULL GREEDY MODE - ALL THE DRUMS!
 
-const SAMPLES_JSON_URL = 'https://raw.githubusercontent.com/felixroos/dough-samples/main/tidal-drum-machines.json';
-
-// Instrument mapping: internal ID -> Strudel ID
+// Extended instrument mapping: 16 instruments for maximum versatility
 export const instruments = [
-  { id: 'kick', label: 'KICK', icon: '🥁', strudelId: 'bd' },
-  { id: 'snare', label: 'SNARE', icon: '🎯', strudelId: 'sd' },
-  { id: 'hihat', label: 'HI-HAT', icon: '🎩', strudelId: 'hh' },
-  { id: 'openhat', label: 'OPEN', icon: '🔓', strudelId: 'oh' },
-  { id: 'clap', label: 'CLAP', icon: '👏', strudelId: 'cp' },
-  { id: 'crash', label: 'CRASH', icon: '💥', strudelId: 'cr' },
-  { id: 'rim', label: 'RIM', icon: '🥢', strudelId: 'rim' },
-  { id: 'cowbell', label: 'BELL', icon: '🔔', strudelId: 'cb' },
+  // === FUNDAMENTALS ===
+  { id: 'kick', name: 'KICK', icon: '🥁', strudelId: 'bd', category: 'fundamental' },
+  { id: 'snare', name: 'SNARE', icon: '🎯', strudelId: 'sd', category: 'fundamental' },
+  { id: 'clap', name: 'CLAP', icon: '👏', strudelId: 'cp', category: 'fundamental' },
+
+  // === HI-HATS ===
+  { id: 'hihat', name: 'HH', icon: '🎩', strudelId: 'hh', category: 'hihat' },
+  { id: 'openhat', name: 'OH', icon: '🔓', strudelId: 'oh', category: 'hihat' },
+
+  // === TOMS ===
+  { id: 'hitom', name: 'HI-TOM', icon: '🔴', strudelId: 'ht', category: 'tom' },
+  { id: 'midtom', name: 'MID-TOM', icon: '🟠', strudelId: 'mt', category: 'tom' },
+  { id: 'lotom', name: 'LO-TOM', icon: '🟤', strudelId: 'lt', category: 'tom' },
+
+  // === CYMBALS ===
+  { id: 'crash', name: 'CRASH', icon: '💥', strudelId: 'cr', category: 'cymbal' },
+  { id: 'ride', name: 'RIDE', icon: '🔔', strudelId: 'rd', category: 'cymbal' },
+
+  // === PERCUSSION ===
+  { id: 'rim', name: 'RIM', icon: '🥢', strudelId: 'rim', category: 'perc' },
+  { id: 'cowbell', name: 'COWBELL', icon: '🐄', strudelId: 'cb', category: 'perc' },
+  { id: 'perc', name: 'PERC', icon: '🪘', strudelId: 'perc', category: 'perc' },
+  { id: 'shaker', name: 'SHAKE', icon: '🎵', strudelId: 'sh', category: 'perc' },
+
+  // === EXTRAS ===
+  { id: 'tom', name: 'TOM', icon: '🎪', strudelId: 'tom', category: 'tom' },
+  { id: 'misc', name: 'MISC', icon: '✨', strudelId: 'misc', category: 'extra' },
 ];
 
-// Cache for samples JSON
-let samplesCache = null;
-
 /**
- * Fetch and cache the tidal-drum-machines.json
+ * VERIFIED drum machine kits - only kits that have all basic sounds
+ * These kits are known to have: bd, sd, hh, oh, cp (at minimum)
+ *
+ * NOTE: We only include kits that work reliably with the drum machine
  */
-export async function fetchSamplesData() {
-  if (samplesCache) return samplesCache;
+export function getAvailableKits() {
+  // Kits verified to have complete drum sounds
+  return [
+    // ========== ROLAND CLASSICS (VERIFIED) ==========
+    { id: 'RolandTR808', name: 'TR-808', brand: 'Roland', year: 1980, style: 'Hip-hop, Trap, Reggaeton' },
+    { id: 'RolandTR909', name: 'TR-909', brand: 'Roland', year: 1983, style: 'House, Techno, Trance' },
+    { id: 'RolandTR707', name: 'TR-707', brand: 'Roland', year: 1984, style: 'Electro, Synthpop' },
+    { id: 'RolandTR606', name: 'TR-606', brand: 'Roland', year: 1981, style: 'Acid, Electro' },
 
-  try {
-    const response = await fetch(SAMPLES_JSON_URL);
-    samplesCache = await response.json();
-    return samplesCache;
-  } catch (error) {
-    console.error('Failed to fetch drum samples:', error);
-    return {};
-  }
+    // ========== LINN (VERIFIED) ==========
+    { id: 'LinnDrum', name: 'LinnDrum', brand: 'Linn', year: 1982, style: 'Prince, 80s Pop' },
+
+    // ========== OBERHEIM (VERIFIED) ==========
+    { id: 'OberheimDMX', name: 'DMX', brand: 'Oberheim', year: 1981, style: 'Electro, Hip-hop' },
+
+    // ========== E-MU (VERIFIED) ==========
+    { id: 'EmuDrumulator', name: 'Drumulator', brand: 'E-mu', year: 1983, style: 'Electro, Industrial' },
+
+    // ========== BOSS (VERIFIED) ==========
+    { id: 'BossDR110', name: 'DR-110', brand: 'Boss', year: 1983, style: 'Minimal, Industrial' },
+
+    // ========== KORG (VERIFIED) ==========
+    { id: 'KorgKR55', name: 'KR-55', brand: 'Korg', year: 1979, style: 'Disco, Classic' },
+    { id: 'KorgDDM110', name: 'DDM-110', brand: 'Korg', year: 1984, style: 'Lo-fi' },
+
+    // ========== ALESIS (VERIFIED) ==========
+    { id: 'AlesisHR16', name: 'HR-16', brand: 'Alesis', year: 1987, style: 'Digital, Clean' },
+
+    // ========== CASIO (VERIFIED) ==========
+    { id: 'CasioRZ1', name: 'RZ-1', brand: 'Casio', year: 1986, style: 'Lo-fi, Hip-hop' },
+  ];
 }
 
-/**
- * Get list of available drum machine kits
- */
-export async function getAvailableKits() {
-  const data = await fetchSamplesData();
-  const kits = new Set();
+// Required sounds that a kit must have to be valid
+export const requiredSounds = ['bd', 'sd', 'hh', 'cp'];
 
-  for (const key of Object.keys(data)) {
-    if (key.includes('_bd')) {
-      const kitName = key.split('_')[0];
-      kits.add(kitName);
-    }
-  }
+// Check if a kit has all required sounds (for dynamic validation)
+export function isKitValid(sounds, kitId) {
+  if (!sounds) return false;
 
-  return Array.from(kits).sort().map(name => ({
-    name,
-    displayName: formatKitName(name),
-  }));
-}
-
-/**
- * Format kit name for display (e.g., "RolandTR808" -> "Roland TR-808")
- */
-function formatKitName(name) {
-  return name
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/TR(\d+)/g, 'TR-$1')
-    .replace(/CR(\d+)/g, 'CR-$1')
-    .replace(/DR(\d+)/g, 'DR-$1')
-    .replace(/KR(\d+)/g, 'KR-$1');
-}
-
-/**
- * Load a single audio sample
- */
-async function loadSample(url, audioContext) {
-  try {
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    return await audioContext.decodeAudioData(arrayBuffer);
-  } catch (error) {
-    console.warn(`Failed to load sample: ${url}`, error);
-    return null;
-  }
-}
-
-/**
- * Load all samples for a drum kit
- */
-export async function loadDrumKit(kitName, audioContext) {
-  const data = await fetchSamplesData();
-  const buffers = {};
-
-  const loadPromises = instruments.map(async (inst) => {
-    const key = `${kitName}_${inst.strudelId}`;
-    const sampleData = data[key];
-
-    if (sampleData) {
-      // Handle both single URLs and arrays of URLs
-      const url = Array.isArray(sampleData) ? sampleData[0] : sampleData;
-      buffers[inst.id] = await loadSample(url, audioContext);
-    }
+  const kitLower = kitId.toLowerCase();
+  return requiredSounds.every(sound => {
+    const key = `${kitLower}_${sound}`;
+    return sounds[key] !== undefined;
   });
-
-  await Promise.all(loadPromises);
-  return buffers;
 }
 
 /**
- * Play a sound from the loaded buffers
+ * Sound types available in Strudel - organized by drum part
  */
-export function playSound(instId, buffers, audioContext, options = {}) {
-  const buffer = buffers[instId];
-  if (!buffer || !audioContext) return;
+export const soundTypes = {
+  // Bass drums
+  bass: ['bd', 'bd:1', 'bd:2', 'bd:3', 'bd:4'],
 
-  const { gain = 0.8, pitch = 0 } = options;
+  // Snares
+  snare: ['sd', 'sd:1', 'sd:2', 'sd:3', 'sd:4'],
 
-  const source = audioContext.createBufferSource();
-  source.buffer = buffer;
+  // Claps
+  clap: ['cp', 'cp:1', 'cp:2'],
 
-  // Apply pitch shift
-  if (pitch !== 0) {
-    source.playbackRate.value = Math.pow(2, pitch / 12);
-  }
+  // Hi-hats
+  hihat: ['hh', 'hh:1', 'hh:2', 'hh:3', 'hh:4'],
+  openHat: ['oh', 'oh:1', 'oh:2'],
 
-  const gainNode = audioContext.createGain();
-  gainNode.gain.value = gain;
+  // Toms
+  hiTom: ['ht', 'ht:1', 'ht:2'],
+  midTom: ['mt', 'mt:1', 'mt:2'],
+  loTom: ['lt', 'lt:1', 'lt:2'],
+  tom: ['tom', 'tom:1', 'tom:2', 'tom:3'],
 
-  source.connect(gainNode);
-  gainNode.connect(audioContext.destination);
+  // Cymbals
+  crash: ['cr', 'cr:1', 'cr:2'],
+  ride: ['rd', 'rd:1', 'rd:2'],
 
-  source.start(0);
+  // Percussion
+  rim: ['rim', 'rim:1', 'rim:2'],
+  cowbell: ['cb', 'cb:1', 'cb:2'],
+  clave: ['cl', 'cl:1'],
+  shaker: ['sh', 'sh:1', 'sh:2'],
+  tambourine: ['tb', 'tb:1'],
+  conga: ['conga', 'conga:1', 'conga:2'],
+  bongo: ['bongo', 'bongo:1'],
+  perc: ['perc', 'perc:1', 'perc:2', 'perc:3'],
 
-  return source;
-}
+  // FX
+  fx: ['fx', 'fx:1', 'fx:2', 'fx:3'],
+  noise: ['noise', 'noise:1'],
+  misc: ['misc', 'misc:1', 'misc:2'],
+};
 
 /**
  * Convert a pattern array to mini-notation string
- * [1,0,0,1,0,0,1,0] -> "x ~ ~ x ~ ~ x ~"
  */
 export function stepsToMiniNotation(steps, instrument) {
   const notation = steps.map(s => s ? instrument : '~').join(' ');
-
-  // Optimize: replace repeated instruments with multiplication
-  // e.g., "hh hh hh hh hh hh hh hh" -> "hh*8"
   const parts = notation.split(' ');
   const allSame = parts.every(p => p === parts[0]);
-  const activeCount = parts.filter(p => p !== '~').length;
 
   if (allSame && parts[0] !== '~') {
     return `${parts[0]}*${parts.length}`;
-  }
-
-  // Check for simple patterns that can use Euclidean notation
-  if (activeCount > 0 && activeCount <= 5) {
-    const positions = parts.map((p, i) => p !== '~' ? i : -1).filter(i => i >= 0);
-    // Could add Euclidean detection here
   }
 
   return notation;
@@ -161,8 +149,8 @@ export function stepsToMiniNotation(steps, instrument) {
  */
 export function patternToStrudel(pattern, kitName, bpm) {
   const lines = [];
-  lines.push(`// Generated by Casa 24 Drum Machine`);
-  lines.push(`setcps(${bpm}/60)  // ${bpm} BPM`);
+  lines.push(`// Generated by Casa 24 Drum Machine - FULL GREEDY MODE`);
+  lines.push(`setcps(${bpm}/60/4)  // ${bpm} BPM`);
   lines.push('');
   lines.push('stack(');
 
@@ -189,7 +177,7 @@ export function patternToStrudel(pattern, kitName, bpm) {
 }
 
 /**
- * Create initial empty pattern state
+ * Create initial empty pattern state for all 16 instruments
  */
 export function createEmptyPattern(steps = 16) {
   const pattern = {};
@@ -200,63 +188,187 @@ export function createEmptyPattern(steps = 16) {
 }
 
 /**
- * Preset patterns for quick start
+ * Preset patterns - now with 16 instruments support
  */
 export const presetPatterns = {
   trap: {
-    name: 'Trap',
-    bpm: 140,
-    pattern: {
-      kick: [1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0],
-      snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-      hihat: [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      openhat: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      clap: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-      crash: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      rim: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      cowbell: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    },
+    kick: [true,false,false,false,false,false,true,false,false,false,true,false,false,false,false,false],
+    snare: [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+    clap: [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+    hihat: [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true],
+    openhat: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
   },
   house: {
-    name: 'House',
-    bpm: 125,
-    pattern: {
-      kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
-      snare: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      hihat: [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
-      openhat: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      clap: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-      crash: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      rim: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      cowbell: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    },
+    kick: [true,false,false,false,true,false,false,false,true,false,false,false,true,false,false,false],
+    snare: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    clap: [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+    hihat: [false,false,true,false,false,false,true,false,false,false,true,false,false,false,true,false],
+    openhat: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,true],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
   },
   dembow: {
-    name: 'Dembow',
-    bpm: 95,
-    pattern: {
-      kick: [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
-      snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-      hihat: [0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1],
-      openhat: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      clap: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      crash: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      rim: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      cowbell: [0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0],
-    },
+    kick: [true,false,false,false,true,false,false,false,true,false,false,false,true,false,false,false],
+    snare: [false,false,false,true,false,false,true,false,false,false,false,true,false,false,true,false],
+    clap: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    hihat: [false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true],
+    openhat: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
   },
   drill: {
-    name: 'UK Drill',
-    bpm: 142,
-    pattern: {
-      kick: [1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0],
-      snare: [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
-      hihat: [1,0,1,1,0,1,1,0,1,1,0,1,1,0,1,0],
-      openhat: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      clap: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      crash: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      rim: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-      cowbell: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    },
+    kick: [true,false,false,false,false,false,true,false,false,true,false,false,false,false,false,false],
+    snare: [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+    clap: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    hihat: [true,false,true,true,false,true,true,false,true,true,false,true,true,false,true,false],
+    openhat: [false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+  },
+  breakbeat: {
+    kick: [true,false,false,false,false,false,false,false,true,false,true,false,false,false,false,false],
+    snare: [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,true],
+    clap: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    hihat: [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true],
+    openhat: [false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,true,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,true,false],
+    crash: [true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+  },
+  techno: {
+    kick: [true,false,false,false,true,false,false,false,true,false,false,false,true,false,false,false],
+    snare: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    clap: [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+    hihat: [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true],
+    openhat: [false,false,true,false,false,false,true,false,false,false,true,false,false,false,true,false],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,true,false,false,false,true,false,false,false,true,false,false,false,true,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+  },
+  reggaeton: {
+    kick: [true,false,false,false,true,false,false,false,true,false,false,false,true,false,false,false],
+    snare: [false,false,false,true,false,false,true,false,false,false,false,true,false,false,true,false],
+    clap: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    hihat: [true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false],
+    openhat: [false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,true],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,true,false,false,false,false,false,false,false,true,false,false,false,false],
+    shaker: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+  },
+  hiphop: {
+    kick: [true,false,false,false,false,false,false,false,true,false,false,false,false,false,true,false],
+    snare: [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+    clap: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    hihat: [true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false],
+    openhat: [false,false,false,false,false,false,false,true,false,false,false,false,false,false,false,false],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+  },
+  disco: {
+    kick: [true,false,false,false,true,false,false,false,true,false,false,false,true,false,false,false],
+    snare: [false,false,false,false,true,false,false,false,false,false,false,false,true,false,false,false],
+    clap: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    hihat: [true,false,true,false,true,false,true,false,true,false,true,false,true,false,true,false],
+    openhat: [false,true,false,true,false,true,false,true,false,true,false,true,false,true,false,true],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+  },
+  dnb: {
+    kick: [true,false,false,false,false,false,false,false,false,false,true,false,false,false,false,false],
+    snare: [false,false,false,false,true,false,false,false,false,false,false,false,false,false,true,false],
+    clap: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    hihat: [true,true,true,true,true,true,true,true,true,true,true,true,true,true,true,true],
+    openhat: [false,false,false,false,false,false,true,false,false,false,false,false,false,false,true,false],
+    hitom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    midtom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    lotom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    crash: [true,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    ride: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    rim: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    cowbell: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    perc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    shaker: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    tom: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
+    misc: [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false],
   },
 };
